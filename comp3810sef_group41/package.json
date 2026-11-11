@@ -1,6 +1,6 @@
 {
   "name": "comp3810sef-group41",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Group41 campus equipment loan manager",
   "engines": {
@@ -20,10 +20,10 @@
     "express-rate-limit": "^8.1.0",
     "express-session": "^1.18.2",
     "helmet": "^8.1.0",
-    "mongoose": "^8.19.0"
+    "mongoose": "^8.19.0",
+    "mongodb-memory-server": "^10.2.0"
   },
   "devDependencies": {
-    "mongodb-memory-server": "^10.2.0",
     "supertest": "^7.1.4"
   }
 }

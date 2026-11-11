@@ -1,0 +1,56 @@
+<%- include('../partials/header') %>
+<div class="heading">
+  <div>
+    <h1>Equipment</h1>
+    <p class="muted">One record for each physical item.</p>
+  </div>
+  <a class="button primary" href="/equipment/new">Add equipment</a>
+</div>
+<form class="panel filters" action="/equipment" method="get">
+  <label class="grow">Keyword
+    <input name="q" value="<%= query.q || '' %>" maxlength="80" placeholder="Name or asset code">
+  </label>
+  <label>Category
+    <select name="category">
+      <option value="">All categories</option>
+      <% for (const category of ['projector', 'microphone', 'tripod']) { %>
+        <option value="<%= category %>" <%= query.category === category ? 'selected' : '' %>><%= labels[category] %></option>
+      <% } %>
+    </select>
+  </label>
+  <label>Status
+    <select name="status">
+      <option value="">All statuses</option>
+      <% for (const status of ['available', 'borrowed', 'maintenance']) { %>
+        <option value="<%= status %>" <%= query.status === status ? 'selected' : '' %>><%= labels[status] %></option>
+      <% } %>
+    </select>
+  </label>
+  <button class="primary">Search</button>
+  <a href="/equipment">Clear</a>
+</form>
+<section class="panel">
+  <p><%= items.length %> equipment records</p>
+  <% if (!items.length) { %>
+    <p class="muted">No equipment matches your search.</p>
+  <% } else { %>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Asset code</th><th>Name</th><th>Category</th><th>Location</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <% for (const item of items) { %>
+            <tr>
+              <td><%= item.assetCode %></td>
+              <td><a href="/equipment/<%= item._id %>"><%= item.name %></a></td>
+              <td><%= labels[item.category] %></td>
+              <td><%= item.location %></td>
+              <td><span class="badge <%= item.status %>"><%= labels[item.status] %></span></td>
+              <td><a href="/equipment/<%= item._id %>">View details</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

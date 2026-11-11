@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+<section class="panel login">
+  <h1>Administrator sign-in</h1>
+  <p class="muted">Manage campus equipment and loan records.</p>
+  <% if (error) { %><p class="alert" role="alert"><%= error %></p><% } %>
+  <form action="/login" method="post">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Username
+      <input name="username" required maxlength="80" autocomplete="username">
+    </label>
+    <label>Password
+      <input type="password" name="password" required maxlength="200" autocomplete="current-password">
+    </label>
+    <button class="primary">Sign in</button>
+  </form>
+</section>
+<%- include('partials/footer') %>

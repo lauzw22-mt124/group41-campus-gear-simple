@@ -1,0 +1,20 @@
+<%- include('../partials/header') %>
+<div class="heading">
+  <div><h1>Check out</h1><p class="muted"><%= item.assetCode %> · <%= item.name %></p></div>
+  <a href="/equipment/<%= item._id %>">Back to equipment</a>
+</div>
+<% if (item.status !== 'available') { %>
+  <p class="alert">This equipment is <%= labels[item.status] %> and cannot be checked out.</p>
+<% } else { %>
+  <form class="panel editor" method="post" action="/loans">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="equipmentId" value="<%= item._id %>">
+    <label>Borrower name<input name="borrowerName" required maxlength="80"></label>
+    <label>Borrower ID<input name="borrowerId" required maxlength="40" placeholder="Student or club member ID"></label>
+    <label>Expected return (optional, Hong Kong time)<input type="datetime-local" name="dueAt"></label>
+    <label>Notes (optional)<textarea name="notes" rows="3" maxlength="1000"></textarea></label>
+    <p class="muted">The server records the actual check-out time and marks this equipment as borrowed.</p>
+    <button class="primary">Confirm check-out</button>
+  </form>
+<% } %>
+<%- include('../partials/footer') %>

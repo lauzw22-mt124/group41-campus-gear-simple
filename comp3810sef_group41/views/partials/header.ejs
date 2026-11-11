@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Campus Gear</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/equipment">Campus Gear <small>Group41</small></a>
+    <% if (user) { %>
+      <nav aria-label="Main navigation">
+        <a href="/equipment">Equipment</a>
+        <a href="/loans">Loans</a>
+      </nav>
+      <form action="/logout" method="post">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button>Sign out</button>
+      </form>
+    <% } %>
+  </header>
+  <main>

@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+<div class="heading">
+  <div><h1><%= item.name %></h1><p class="muted"><%= item.assetCode %></p></div>
+  <a href="/equipment">Back to equipment</a>
+</div>
+<section class="panel">
+  <dl>
+    <dt>Status</dt><dd><span class="badge <%= item.status %>"><%= labels[item.status] %></span></dd>
+    <dt>Category</dt><dd><%= labels[item.category] %></dd>
+    <dt>Location</dt><dd><%= item.location %></dd>
+    <dt>Notes</dt><dd><%= item.description || 'No notes' %></dd>
+  </dl>
+  <div class="actions">
+    <a class="button" href="/equipment/<%= item._id %>/edit">Edit record</a>
+    <% if (item.status === 'available') { %>
+      <a class="button primary" href="/loans/new?equipmentId=<%= item._id %>">Check out</a>
+    <% } %>
+    <% if (item.status !== 'borrowed') { %>
+      <form method="post" action="/equipment/<%= item._id %>/maintenance">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <input type="hidden" name="status" value="<%= item.status === 'maintenance' ? 'available' : 'maintenance' %>">
+        <button><%= item.status === 'maintenance' ? 'Finish maintenance' : 'Send for maintenance' %></button>
+      </form>
+    <% } %>
+    <% if (item.status === 'available' && !loans.length) { %>
+      <form method="post" action="/equipment/<%= item._id %>/delete" data-confirm="Delete this unused equipment record?">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="danger">Delete equipment</button>
+      </form>
+    <% } %>
+  </div>
+  <% if (loans.length) { %><p class="muted">Equipment with loan history cannot be deleted.</p><% } %>
+</section>
+<section class="panel">
+  <h2>Loan history</h2>
+  <% if (!loans.length) { %><p class="muted">No loan history yet.</p><% } else { %>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Borrower</th><th>Checked out</th><th>Returned</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <% for (const loan of loans) { %>
+            <tr>
+              <td><%= loan.borrowerName %><small><%= loan.borrowerId %></small></td>
+              <td><%= date(loan.borrowedAt) %></td>
+              <td><%= date(loan.returnedAt) %></td>
+              <td><%= labels[loan.status] %></td>
+              <td>
+                <% if (loan.status === 'active') { %>
+                  <form method="post" action="/loans/<%= loan._id %>/return" data-confirm="Confirm that this equipment has been returned?">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>">
+                    <button>Return equipment</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

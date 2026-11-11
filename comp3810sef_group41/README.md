@@ -49,7 +49,7 @@ Start with this flow: **route → service → Mongoose model → MongoDB → EJS
 | `views/`, `public/`                                     | English EJS pages, one stylesheet and small confirmation/back-button helpers. |
 | `scripts/seed.js`                                       | Creates a missing administrator and sample equipment.                         |
 | `scripts/demo-api.sh`                                   | Prepared curl demonstration.                                                  |
-| `tests/integration.test.js`, `.github/workflows/ci.yml` | Regression tests and their automatic Ubuntu run.                              |
+| `tests/integration.test.js`, `../.github/workflows/ci.yml` | Regression tests and their automatic Ubuntu run.                              |
 | `package.json`, `package-lock.json`                     | Dependencies and reproducible installation; the lockfile is generated.        |
 | `docs/API.md`, `docs/DEMO.md`                           | API examples and a short presentation/code walkthrough.                       |
 
@@ -62,8 +62,8 @@ Runtime packages: Express (requests), EJS (HTML), Mongoose (data), dotenv (setti
 Use **Node.js 22** and one persistent MongoDB replica-set database. For a new setup, use a MongoDB Atlas connection string. An existing replica-set URI also works; a standalone MongoDB server cannot run the loan transactions. This version has one normal startup path and no `npm run demo` or Docker setup.
 
 ```bash
-git clone https://github.com/lauzw22-mt124/campus-equipment-loan-manager.git
-cd campus-equipment-loan-manager
+git clone https://github.com/lauzw22-mt124/group41-campus-gear-simple.git
+cd group41-campus-gear-simple/comp3810sef_group41
 npm ci
 cp .env.example .env
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"

@@ -1,5 +1,7 @@
 # Campus Gear — Group41
 
+Application files are in [`comp3810sef_group41/`](comp3810sef_group41/). File paths below are relative to that folder; the GitHub Actions workflow is at repository root.
+
 ## 1. Project info
 
 A small **Express + Mongoose + EJS** application for lending campus projectors, microphones and tripods. One record represents one physical asset; it is not a quantity inventory.
@@ -62,8 +64,8 @@ Runtime packages: Express (requests), EJS (HTML), Mongoose (data), dotenv (setti
 Use **Node.js 22** and one persistent MongoDB replica-set database. For a new setup, use a MongoDB Atlas connection string. An existing replica-set URI also works; a standalone MongoDB server cannot run the loan transactions. This version has one normal startup path and no `npm run demo` or Docker setup.
 
 ```bash
-git clone https://github.com/lauzw22-mt124/campus-equipment-loan-manager.git
-cd campus-equipment-loan-manager
+git clone https://github.com/lauzw22-mt124/group41-campus-gear-simple.git
+cd group41-campus-gear-simple/comp3810sef_group41
 npm ci
 cp .env.example .env
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
@@ -107,7 +109,7 @@ While the server runs, open a second terminal:
 bash scripts/demo-api.sh http://127.0.0.1:8099
 ```
 
-The script uses curl, prints responses and checks their HTTP codes. It demonstrates all API routes, including conflicts, and retains a returned fictional loan as history. It deletes only the unused asset it creates. Run it on a demonstration database. See [API payloads and manual curl commands](docs/API.md).
+The script uses curl, prints responses and checks their HTTP codes. It demonstrates all API routes, including conflicts, and retains a returned fictional loan as history. It deletes only the unused asset it creates. Run it on a demonstration database. See [API payloads and manual curl commands](comp3810sef_group41/docs/API.md).
 
 ```bash
 npm test
@@ -123,7 +125,7 @@ Tests use a separate, temporary **real MongoDB replica set**, not your `.env` da
 | Searches using different conditions                             | Equipment and loan filters                        |
 | GET, POST, PUT, DELETE                                          | Prepared curl script                              |
 | Project/group info, file intro, operation guide                 | These four README sections                        |
-| Ten-minute live presentation, all web/API services              | [Presentation and code walkthrough](docs/DEMO.md) |
+| Ten-minute live presentation, all web/API services              | [Presentation and code walkthrough](comp3810sef_group41/docs/DEMO.md) |
 | Submission folder with `server.js`, `package.json`, `README.md` | `comp3810sef_group41` inside the ZIP              |
 
 Exclude `node_modules`, `.env`, `.git` and database caches from the ZIP. Follow the current OLE instructions for deadlines and filename conventions. Complete a timed rehearsal and the group's actual contribution records before submission.

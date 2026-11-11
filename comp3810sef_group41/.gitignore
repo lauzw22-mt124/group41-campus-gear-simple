@@ -8,3 +8,6 @@ coverage/
 artifacts/
 .cache/
 *.zip
+
+# Persistent local database; never commit or include in submission ZIPs.
+.local-data/

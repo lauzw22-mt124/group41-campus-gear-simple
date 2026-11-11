@@ -2,11 +2,11 @@
 
 ## Ten-minute demonstration
 
-Use the actual assigned roles and contributions. Keep the website, a terminal and this short guide open; do not browse every repository file. Prepare dependencies/database/network and the curl commands before class. Present on local Ubuntu or your chosen cloud host and follow the current course presentation-sheet instructions.
+Use the actual assigned roles and contributions. Keep the website, a terminal and this short guide open; do not browse every repository file. Install dependencies and download MongoDB by running the app once before class; prepare the curl commands. Present on local Ubuntu and follow the current course presentation-sheet instructions.
 
 | Time       | Role | Show                                                                                               |
 | ---------- | ---- | -------------------------------------------------------------------------------------------------- |
-| 0:00–1:15  | A    | Purpose, six members/roles, running server, login.                                                 |
+| 0:00–1:15  | A    | Purpose, six members/roles, `npm start`, local server address and login.                                                 |
 | 1:15–3:00  | C    | Add equipment, combine search filters, edit location, delete a separate unused asset.              |
 | 3:00–5:00  | D    | Check out, search by borrower, return, maintenance and restore.                                    |
 | 5:00–7:15  | E    | Run `bash scripts/demo-api.sh`; explain POST, GET, PUT and DELETE plus loan/maintenance endpoints. |
@@ -15,6 +15,14 @@ Use the actual assigned roles and contributions. Keep the website, a terminal an
 | 9:30–10:00 | A    | Sign out, verify protected access and keep a short time buffer.                                    |
 
 Use fictional borrower details. The Delete example must be an Available asset with no history. In the curl script, 409 is the expected result for a prohibited transition, not a crash.
+
+## Local rehearsal checklist
+
+1. On the presentation laptop, run `npm start` once with Internet available to cache MongoDB. Sign in and prepare fictional sample records.
+2. Stop with Ctrl+C, disconnect Internet if desired, and start again. Check that saved records remain.
+3. Keep the server terminal open and open `http://127.0.0.1:8099` in the browser.
+4. Use a second terminal in `comp3810sef_group41` for `bash scripts/demo-api.sh`.
+5. Explain that GitHub shares source code; the website and database run on this laptop. No Docker or cloud deployment is used.
 
 ## Read the code in this order
 
@@ -61,13 +69,15 @@ curl JSON   -> API route ---+
 | What are `<%`, `<%=`, `<%-`?            | Execute template code; output escaped text; output raw HTML. Use raw output only for trusted partial includes.              |
 | What does PUT do here?                  | Replaces all editable equipment fields; the client supplies all required fields.                                            |
 | Why services?                           | Both web and API routes call one set of business rules.                                                                     |
-| Why a replica-set database?             | Multi-document transactions need it; Atlas provides this capability.                                                        |
+| Why a replica-set database?             | Multi-document transactions need it; database.js creates a one-node replica set on this computer.                                                        |
+
+The database launcher package is named `mongodb-memory-server`, but this application starts a real `mongod` executable with WiredTiger and an explicit `.local-data/mongodb` directory. `disconnect()` stops it with cleanup disabled, so it preserves data. The restart regression test verifies this behavior.
 
 ## Each member's preparation
 
 | Role | Must be able to explain                                        | Example independent work to record                     |
 | ---- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| A    | Middleware order, sessions, login/logout, environment settings | Run on the presentation machine; improve a login case. |
+| A    | Local startup, middleware order, sessions and login/logout | Run on the presentation machine; improve a login case. |
 | B    | All three schemas, reference and indexes                       | Inspect stored records and verify a schema constraint. |
 | C    | Form input → route → CRUD result                               | Improve an equipment form or query with a test.        |
 | D    | Borrow/return transaction and state changes                    | Test concurrent checkout and a failed return.          |

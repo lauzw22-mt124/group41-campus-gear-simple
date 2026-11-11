@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('node:path').join(__dirname, '..', '.env') });
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Equipment = require('../models/Equipment');
@@ -51,7 +51,7 @@ async function seed({ username, password }) {
 }
 
 if (require.main === module) {
-  db.connect(process.env.MONGODB_URI)
+  db.connectLocal()
     .then(() =>
       seed({ username: process.env.ADMIN_USERNAME, password: process.env.ADMIN_PASSWORD }),
     )

@@ -38,7 +38,7 @@ Start with this flow: **route → service → Mongoose model → MongoDB → EJS
 | File / folder                                           | What to read it for                                                           |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `server.js`                                             | Express setup, sessions, routes and error handler; application entry point.   |
-| `database.js`                                           | Connects to MongoDB and builds unique indexes.                                |
+| `database.js`                                           | Starts local MongoDB, preserves disk data and builds unique indexes.                                |
 | `models/User.js`                                        | Administrator username and password hash.                                     |
 | `models/Equipment.js`                                   | Physical equipment fields and states.                                         |
 | `models/Loan.js`                                        | Borrower, equipment reference and loan dates; one-active-loan index.          |
@@ -49,43 +49,57 @@ Start with this flow: **route → service → Mongoose model → MongoDB → EJS
 | `services/loanService.js`                               | Borrow, return and loan search.                                               |
 | `helpers.js`                                            | Shared input validation and error messages.                                   |
 | `views/`, `public/`                                     | English EJS pages, one stylesheet and small confirmation/back-button helpers. |
-| `scripts/seed.js`                                       | Creates a missing administrator and sample equipment.                         |
+| `scripts/seed.js`                                       | Creates missing login/sample records automatically at startup; preserves existing data.                         |
 | `scripts/demo-api.sh`                                   | Prepared curl demonstration.                                                  |
-| `tests/integration.test.js`, `.github/workflows/ci.yml` | Regression tests and their automatic Ubuntu run.                              |
+| `tests/`, `.github/workflows/ci.yml` | Regression tests and their automatic Ubuntu run.                              |
 | `package.json`, `package-lock.json`                     | Dependencies and reproducible installation; the lockfile is generated.        |
 | `docs/API.md`, `docs/DEMO.md`                           | API examples and a short presentation/code walkthrough.                       |
 
-Runtime packages: Express (requests), EJS (HTML), Mongoose (data), dotenv (settings), express-session/connect-mongo (persistent login), bcryptjs (password hashes), Helmet (response headers) and express-rate-limit (login attempts). Supertest and mongodb-memory-server are used only by tests.
+Runtime packages: Express (requests), EJS (HTML), Mongoose (data), dotenv (settings), express-session/connect-mongo (persistent login), bcryptjs (password hashes), Helmet (response headers) and express-rate-limit (login attempts). mongodb-memory-server manages the real local MongoDB executable; with the explicit WiredTiger data directory, records persist on disk. Supertest is used only by tests.
 
 ## 4. Operation guides
 
-### Start the application
+### Start locally (no Docker or cloud database)
 
-Use **Node.js 22** and one persistent MongoDB replica-set database. For a new setup, use a MongoDB Atlas connection string. An existing replica-set URI also works; a standalone MongoDB server cannot run the loan transactions. This version has one normal startup path and no `npm run demo` or Docker setup.
+Use **Node.js 22**. The website and database both run on your own computer. No Docker, MongoDB Atlas account or cloud connection string is needed. `npm start` starts a real MongoDB 7.0.24 process, initializes the local replica set required for loan transactions, inserts missing sample records and starts Express.
+
+For the assessed presentation, use **local Ubuntu**, which is one of the course's permitted environments. This guide uses **Ubuntu 24.04**; macOS can be used for development. On Ubuntu 24.04, install the MongoDB executable's runtime libraries once if missing:
+
+```bash
+sudo apt update
+sudo apt install -y libcurl4t64 libssl3t64
+```
+
+First-time setup:
 
 ```bash
 git clone https://github.com/lauzw22-mt124/group41-campus-gear-simple.git
 cd group41-campus-gear-simple/comp3810sef_group41
-npm ci
+npm ci --ignore-scripts
 cp .env.example .env
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 ```
 
-Edit `.env` before continuing:
-
-1. Set `MONGODB_URI` to your Atlas URI, including database name `group41`, database user and password. Allow your development machine's IP in Atlas. URL-encode special characters in the database password.
-2. Paste the generated value into `SESSION_SECRET`.
-3. Set `ADMIN_USERNAME=admin41` and your own `ADMIN_PASSWORD` (at least 12 characters).
-4. Leave `HOST=127.0.0.1`, `PORT=8099`, `NODE_ENV=development` and `API_AUTH_REQUIRED=false` for the local classroom demonstration.
+Edit `.env`: paste the generated value into `SESSION_SECRET`, keep `ADMIN_USERNAME=admin41`, and choose your own `ADMIN_PASSWORD` with at least 12 characters. Leave `PORT=8099` and `API_AUTH_REQUIRED=false` for the course demonstration. Do not add a cloud MongoDB URI. If updating an existing checkout, keep your current secret and administrator credentials; the old `MONGODB_URI`, `HOST`, `NODE_ENV` and `TRUST_PROXY` settings are no longer used by normal startup.
 
 ```bash
-npm run seed
 npm start
 ```
 
-Open **http://127.0.0.1:8099**. Sign in with `ADMIN_USERNAME` / `ADMIN_PASSWORD` from your `.env`. There is no fixed public administrator password in the normal installation. Seed inserts only missing records: existing passwords, equipment and loan history are preserved. Changing `.env` does not reset an account that already exists. Database data and login sessions persist across server restarts.
+Wait for **Campus Gear: http://127.0.0.1:8099**, then open that address and sign in using the username/password from `.env`. Keep this terminal open. The website listens only on `127.0.0.1:8099`; MongoDB listens only on `127.0.0.1:27041`. Run one copy at a time. If a port is busy, stop the other copy; do not delete database files to fix a port conflict.
 
-For the presentation, run this setup on your **local Ubuntu** machine as required by the course, unless using a separately configured cloud host. Rehearse on that exact environment. An Internet-facing host additionally needs HTTPS, `NODE_ENV=production` and `API_AUTH_REQUIRED=true`; `TRUST_PROXY=true` is only for one trusted HTTPS reverse proxy. Making GitHub public does not deploy this application.
+The first `npm ci` and first `npm start` need Internet access to download packages and the official MongoDB executable. Finish both before class. The executable is cached in `.cache/mongodb/`; subsequent starts can run offline while that cache and `node_modules` remain present. MongoDB is downloaded as a native program, not a Docker image.
+
+### Stop, restart and keep data
+
+- Press **Ctrl+C** in the server terminal to stop the website and MongoDB cleanly.
+- Run **`npm start`** again from the application folder to resume.
+- Equipment, accounts, loans and sessions are stored in **`.local-data/mongodb/`** on that computer. They survive a normal stop/restart. Keep this folder to retain the data.
+- Startup seed inserts only missing records. It never resets existing passwords, changed equipment or loan history. Changing `ADMIN_PASSWORD` in `.env` does not change an account that already exists.
+- For a local backup, stop the app and copy `.local-data/` plus your private `.env` to a separate local location. Keep them out of GitHub and the submission ZIP.
+- Six members can edit the same GitHub source, but each computer has its own database. Pick one laptop for the presentation and prepare its sample data in advance.
+
+`npm run seed` is an optional maintenance command when the website is stopped; normal startup already seeds missing records. The GitHub Actions check only tests the source code on a temporary runner. It does not host the website or store your application data in the cloud.
 
 ### Web demonstration
 
@@ -115,7 +129,7 @@ The script uses curl, prints responses and checks their HTTP codes. It demonstra
 npm test
 ```
 
-Tests use a separate, temporary **real MongoDB replica set**, not your `.env` database. The first run downloads MongoDB 7.0.24. Tests cover web/API CRUD, login, validation, concurrent loans, rollback, deletion history, XSS and session persistence. Do not remove the checks merely to reduce the file count.
+Tests use separate, temporary **real MongoDB replica sets**, not your `.local-data` database. The first run downloads MongoDB 7.0.24. Tests cover web/API CRUD, login, validation, concurrent loans, rollback, deletion history, XSS, session persistence and a real local MongoDB stop/restart with an active loan. Do not remove the checks merely to reduce the file count.
 
 ### Course checklist
 
@@ -128,4 +142,4 @@ Tests use a separate, temporary **real MongoDB replica set**, not your `.env` da
 | Ten-minute live presentation, all web/API services              | [Presentation and code walkthrough](comp3810sef_group41/docs/DEMO.md) |
 | Submission folder with `server.js`, `package.json`, `README.md` | `comp3810sef_group41` inside the ZIP              |
 
-Exclude `node_modules`, `.env`, `.git` and database caches from the ZIP. Follow the current OLE instructions for deadlines and filename conventions. Complete a timed rehearsal and the group's actual contribution records before submission.
+Exclude `node_modules`, `.env`, `.git`, `.local-data` and `.cache` from the ZIP. Local data and downloaded programs are not submission files. Follow the current OLE instructions for deadlines and filename conventions. Complete a timed rehearsal and the group's actual contribution records before submission.

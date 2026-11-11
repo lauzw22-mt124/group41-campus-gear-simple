@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('node:path').join(__dirname, '.env') });
 const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -107,7 +107,19 @@ function createApp({
 }
 
 async function start() {
-  await db.connect(process.env.MONGODB_URI);
+  if (
+    !process.env.SESSION_SECRET ||
+    process.env.SESSION_SECRET.length < 32 ||
+    process.env.SESSION_SECRET.startsWith('replace-')
+  ) {
+    throw new Error('Set SESSION_SECRET in .env before starting. See README.md.');
+  }
+  console.log('Starting local MongoDB (the first run may download MongoDB 7.0.24)...');
+  await db.connectLocal();
+  await require('./scripts/seed').seed({
+    username: process.env.ADMIN_USERNAME,
+    password: process.env.ADMIN_PASSWORD,
+  });
   const store = MongoStore.create({
     client: mongoose.connection.getClient(),
     collectionName: 'sessions',
@@ -115,13 +127,18 @@ async function start() {
   const app = createApp({
     secret: process.env.SESSION_SECRET,
     store,
-    production: process.env.NODE_ENV === 'production',
     apiAuthRequired: process.env.API_AUTH_REQUIRED === 'true',
-    trustProxy: process.env.TRUST_PROXY === 'true',
   });
   const port = Number(process.env.PORT || 8099);
-  const host = process.env.HOST || '127.0.0.1';
+  const host = '127.0.0.1'; // Local classroom use only.
   const server = app.listen(port, host, () => console.log(`Campus Gear: http://${host}:${port}`));
+  server.on('error', async (err) => {
+    console.error(
+      err.code === 'EADDRINUSE' ? `Port ${port} is busy. Stop the other app first.` : err.message,
+    );
+    await db.disconnect();
+    process.exit(1);
+  });
   for (const signal of ['SIGINT', 'SIGTERM']) {
     process.once(signal, () =>
       server.close(async () => {

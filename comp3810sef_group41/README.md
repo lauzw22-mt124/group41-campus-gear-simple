@@ -61,7 +61,7 @@ Runtime packages: Express (requests), EJS (HTML), Mongoose (data), dotenv (setti
 
 Use **Node.js 22**. The website and database both run on your own computer. No Docker, MongoDB Atlas account or cloud connection string is needed. `npm start` starts a real MongoDB 7.0.24 process, initializes the local replica set required for loan transactions, inserts missing sample records and starts Express.
 
-For the assessed presentation, use **local Ubuntu 24.04** as specified by the course. macOS can be used for development. On Ubuntu 24.04, install the MongoDB executable's runtime libraries once if missing:
+For the assessed presentation, use **local Ubuntu**, which is one of the course's permitted environments. This guide uses **Ubuntu 24.04**; macOS can be used for development. On Ubuntu 24.04, install the MongoDB executable's runtime libraries once if missing:
 
 ```bash
 sudo apt update

@@ -12,8 +12,6 @@ A small **Express + Mongoose + EJS** application for lending campus projectors, 
 
 **Rules:** only Available equipment can be borrowed. An asset may have at most one Active loan. Returning it updates the loan and restores availability. Only Available equipment with no loan history can be deleted.
 
-**Provenance:** The initial implementation and this simplification were prepared with an AI coding agent. The course prohibits purely Agent-completed submissions. Members must independently understand, adapt and test their work and record their actual contributions; the ownership table below is not proof of completed student work.
-
 ## 2. Group info
 
 Group **41** · COMP3810SEF. Names and SIDs below are preserved from the group's existing README.

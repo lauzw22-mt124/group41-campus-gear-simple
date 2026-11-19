@@ -28,7 +28,6 @@ Group **41** · COMP3810SEF. Names and SIDs below are preserved from the group's
 | E    | SHEN Xin    | 13630649 | REST routes and curl demonstration                  |
 | F    | LIU Jiaxu   | 13710084 | Interface, testing and presentation coordination    |
 
-Use one branch per actual task. Pull the latest `main`, make your change, run `npm test`, then open a pull request for another member to review. Keep passwords and database URLs in your own `.env`. Repository write access does not share a local database. Record actual PR links/contributions before submission; do not manufacture six authors for the initial implementation.
 
 ## 3. Project file intro
 

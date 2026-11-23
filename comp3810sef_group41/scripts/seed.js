@@ -21,16 +21,16 @@ async function seed({ username, password }) {
     { upsert: true },
   );
   const samples = [
-    ['PROJ-001', 'Epson Portable Projector', 'projector', 'Club Room / Cabinet A', 'available'],
+    ['PROJ-001', 'Epson Portable Projector', 'projector', 'HKMU / C0G01', 'available'],
     [
       'MIC-001',
       'Wireless Handheld Microphone',
       'microphone',
-      'Maintenance Workbench',
+      'JCPC / D0625',
       'maintenance',
     ],
-    ['TRI-001', 'Camera Tripod', 'tripod', 'Club Room / Cabinet B', 'available'],
-    ['MIC-002', 'Conference Microphone', 'microphone', 'Club Room / Cabinet A', 'available'],
+    ['TRI-001', 'Camera Tripod', 'tripod', 'IOH / F0401', 'available'],
+    ['MIC-002', 'Conference Microphone', 'microphone', 'HPLC / H002', 'available'],
   ];
   for (const [assetCode, name, category, location, status] of samples) {
     await Equipment.updateOne(

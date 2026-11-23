@@ -14,8 +14,6 @@ A small **Express + Mongoose + EJS** application for lending campus projectors, 
 
 ## 2. Group info
 
-Group **41** · COMP3810SEF. Names and SIDs below are preserved from the group's existing README.
-
 | Role | Student     | SID      | Ownership                                           |
 | ---- | ----------- | -------- | --------------------------------------------------- |
 | A    | LIU Jinwei  | 13756142 | Server setup, login/logout and integration          |

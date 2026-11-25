@@ -339,3 +339,22 @@ test('MongoDB session store retains login across application instances', async (
   const restartedApp = createApp({ secret, store: MongoStore.create(options) });
   await request(restartedApp).get('/equipment').set('Cookie', cookie).expect(200);
 });
+test('equipment CRUD by exact code handles duplicate codes, renames and loan history', async () => {
+  const item = data({ assetCode: 'BY-CODE-1' });
+  const path = '/api/equipment/by-code/';
+  await request(app).post('/api/equipment').send(item).expect(201);
+  await request(app).post('/api/equipment').send({ ...item, assetCode: 'by-code-1' }).expect(409);
+  await request(app).get(path + 'BY-CODE').expect(404);
+  const found = await request(app).get(path + 'by-code-1').expect(200);
+  assert.equal(found.body.data.assetCode, item.assetCode);
+  const renamed = '0123456789abcdef01234567';
+  await request(app).put(path + item.assetCode).send({ ...item, assetCode: renamed }).expect(200);
+  await request(app).get(path + item.assetCode).expect(404);
+  await request(app).delete(path + renamed).expect(204);
+  await request(app).get(path + renamed).expect(404);
+  const borrowed = await create();
+  const active = await loan(borrowed);
+  assert.equal(active.status, 201);
+  await request(app).put('/api/loans/' + active.body.data._id + '/return').send({}).expect(200);
+  await request(app).delete(path + borrowed.assetCode).expect(409);
+});

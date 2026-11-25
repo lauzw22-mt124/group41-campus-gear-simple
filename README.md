@@ -42,7 +42,7 @@ Run `npm start`. Wait for the server address, then open [Campus Gear](http://127
 
 ## Equipment CRUD in four commands
 
-Run these in a second Ubuntu terminal. Start with an unused asset code. Read searches by asset code. In the returned list, find the exact `assetCode` and use its `_id` for `ASSET_ID` in Update and Delete. Each example prints the HTTP status and response.
+Run these in a second Ubuntu terminal. Start with an unused asset code. Use the same asset code in all four commands. Codes are unique and are normalized to uppercase. Each example prints the HTTP status and response.
 
 ### 1. Create — add a tripod (201)
 
@@ -53,24 +53,24 @@ curl -i -X POST 'http://127.0.0.1:8099/api/equipment' --json '{"assetCode":"CRUD
 ### 2. Read — search by asset code (200)
 
 ```bash
-curl -i 'http://127.0.0.1:8099/api/equipment?q=CRUD-001'
+curl -i 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001'
 ```
 
 ### 3. Update — move it to Room B (200)
 
 ```bash
-curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/ASSET_ID' --json '{"assetCode":"CRUD-001","name":"Demo Tripod","category":"tripod","location":"Room B"}'
+curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001' --json '{"assetCode":"CRUD-001","name":"Demo Tripod","category":"tripod","location":"Room B"}'
 ```
 
 ### 4. Delete — remove the unused tripod (204, empty body)
 
 ```bash
-curl -i -X DELETE 'http://127.0.0.1:8099/api/equipment/ASSET_ID'
+curl -i -X DELETE 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001'
 ```
 
 ## API reference
 
-The application exposes nine REST endpoints and one health check. In local demo mode the API accepts the curl requests below directly. With `API_AUTH_REQUIRED=true`, send a signed-in session cookie with each API request. Web management pages always require login.
+The application exposes REST endpoints and one health check. In local demo mode the API accepts the curl requests below directly. With `API_AUTH_REQUIRED=true`, send a signed-in session cookie with each API request. Web management pages always require login.
 
 | Method | Full URL | Usage | Success |
 | --- | --- | --- | --- |
@@ -84,6 +84,8 @@ The application exposes nine REST endpoints and one health check. In local demo 
 | POST | `http://127.0.0.1:8099/api/loans` | Check out an available asset and create an active loan. | 201 |
 | GET | `http://127.0.0.1:8099/api/loans` | Search loans by borrower, status or equipment ID. | 200 |
 | PUT | `http://127.0.0.1:8099/api/loans/LOAN_ID/return` | Return an active loan and make the asset available again. | 200 |
+
+GET, PUT and DELETE also accept `http://127.0.0.1:8099/api/equipment/by-code/ASSET_CODE` for an exact code match. If an update changes the code, use the new code in later requests.
 
 The four examples above cover equipment creation, search by asset code, update and deletion. For the remaining examples, choose another available asset and use its 24-character database ID for `ASSET_ID`.
 

@@ -12,17 +12,21 @@ router.use((req, res, next) => {
 router.get('/equipment', async (req, res) =>
   res.json({ data: await equipment.listEquipment(req.query) }),
 );
-router.get('/equipment/:id', async (req, res) =>
-  res.json({ data: await equipment.getEquipment(req.params.id) }),
+const equipmentPaths = ['/equipment/:id', '/equipment/by-code/:assetCode'];
+function equipmentKey(params) {
+  return params.assetCode === undefined ? params.id : { assetCode: params.assetCode };
+}
+router.get(equipmentPaths, async (req, res) =>
+  res.json({ data: await equipment.getEquipment(equipmentKey(req.params)) }),
 );
 router.post('/equipment', async (req, res) =>
   res.status(201).json({ data: await equipment.createEquipment(req.body) }),
 );
-router.put('/equipment/:id', async (req, res) =>
-  res.json({ data: await equipment.updateEquipment(req.params.id, req.body) }),
+router.put(equipmentPaths, async (req, res) =>
+  res.json({ data: await equipment.updateEquipment(equipmentKey(req.params), req.body) }),
 );
-router.delete('/equipment/:id', async (req, res) => {
-  await equipment.deleteEquipment(req.params.id);
+router.delete(equipmentPaths, async (req, res) => {
+  await equipment.deleteEquipment(equipmentKey(req.params));
   res.status(204).end();
 });
 router.put('/equipment/:id/maintenance', async (req, res) => {

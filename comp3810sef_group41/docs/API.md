@@ -66,6 +66,8 @@ curl -i -X PUT "$BASE/api/loans/LOAN_ID/return" \
 curl -i -X DELETE "$BASE/api/equipment/UNUSED_ASSET_ID"
 ```
 
+For equipment CRUD, use the existing POST endpoint to create the record. GET, PUT and DELETE also accept `http://127.0.0.1:8099/api/equipment/by-code/ASSET_CODE` with the same payloads, status codes and deletion rules as the ID routes. The code is case-insensitive and matches exactly. After renaming an asset, use its updated code.
+
 ## Query rules
 
 - Equipment: `q` performs a literal case-insensitive substring search of asset code/name. It does not execute user-provided regular expressions. `category` and `status` match exact enum values; conditions combine with AND.

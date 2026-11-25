@@ -1,6 +1,6 @@
 # REST API guide
 
-Base URL: `http://127.0.0.1:8099`. All responses are JSON except successful DELETE (empty 204). `POST` and `PUT` require `Content-Type: application/json`. Object IDs are 24-character hexadecimal strings. Unknown input fields/query parameters are rejected.
+Base URL: `http://127.0.0.1:8099`. All responses are JSON. Successful DELETE returns HTTP 200 and `{"ok":true}`. `POST` and `PUT` require `Content-Type: application/json`. Object IDs are 24-character hexadecimal strings. Unknown input fields/query parameters are rejected.
 
 The local course mode (API_AUTH_REQUIRED=false) allows API requests without authentication. If `API_AUTH_REQUIRED=true`, obtain a normal web session and send its cookie; see the authenticated curl steps below. No CORS allowance is configured.
 
@@ -62,7 +62,7 @@ curl -i "$BASE/api/loans?equipmentId=ASSET_ID"
 curl -i -X PUT "$BASE/api/loans/LOAN_ID/return" \
   -H 'Content-Type: application/json' -d '{}'
 
-# DELETE (204): use a DIFFERENT available asset that has NEVER been borrowed
+# DELETE (200): use a DIFFERENT available asset that has NEVER been borrowed
 curl -i -X DELETE "$BASE/api/equipment/UNUSED_ASSET_ID"
 ```
 

@@ -168,7 +168,7 @@ test('REST equipment CRUD uses required methods and returns actual data', async 
     .expect(200);
   const r = await request(app).get(`/api/equipment/${item._id}`);
   assert.equal(r.body.data.name, 'Updated API name');
-  await request(app).delete(`/api/equipment/${item._id}`).expect(204);
+  await request(app).delete(`/api/equipment/${item._id}`).expect(200, { ok: true });
   await request(app).get(`/api/equipment/${item._id}`).expect(404);
 });
 test('duplicate asset code, forbidden status edit and bad categories are rejected', async () => {
@@ -277,7 +277,7 @@ test('parallel borrow/delete never leaves a dangling loan', async () => {
     request(app).delete(`/api/equipment/${item._id}`),
   ]);
   assert.ok([201, 404].includes(borrow.status));
-  assert.ok([204, 409].includes(del.status));
+  assert.ok([200, 409].includes(del.status));
   if (borrow.status === 201) assert.ok(await Equipment.findById(item._id));
   else assert.equal(await Loan.countDocuments({ equipmentId: item._id }), 0);
 });
@@ -350,7 +350,7 @@ test('equipment CRUD by exact code handles duplicate codes, renames and loan his
   const renamed = '0123456789abcdef01234567';
   await request(app).put(path + item.assetCode).send({ ...item, assetCode: renamed }).expect(200);
   await request(app).get(path + item.assetCode).expect(404);
-  await request(app).delete(path + renamed).expect(204);
+  await request(app).delete(path + renamed).expect(200, { ok: true });
   await request(app).get(path + renamed).expect(404);
   const borrowed = await create();
   const active = await loan(borrowed);

@@ -27,7 +27,7 @@ router.put(equipmentPaths, async (req, res) =>
 );
 router.delete(equipmentPaths, async (req, res) => {
   await equipment.deleteEquipment(equipmentKey(req.params));
-  res.status(204).end();
+  res.json({ ok: true });
 });
 router.put('/equipment/:id/maintenance', async (req, res) => {
   require('../helpers').allowed(req.body, ['status']);

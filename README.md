@@ -62,13 +62,15 @@ curl -i 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001'
 curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001' --json '{"assetCode":"CRUD-001","name":"Demo Tripod","category":"tripod","location":"Room B"}'
 ```
 
-### 4. Delete — remove the unused tripod (204, empty body)
+### 4. Delete — remove the unused tripod (200, `{"ok":true}`)
 
 ```bash
 curl -i -X DELETE 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001'
 ```
 
 ## API reference
+
+See the [complete API guide](https://github.com/lauzw22-mt124/group41-campus-gear-simple/blob/main/api.md) for request examples and response types.
 
 The application exposes REST endpoints and one health check. In local demo mode the API accepts the curl requests below directly. With `API_AUTH_REQUIRED=true`, send a signed-in session cookie with each API request. Web management pages always require login.
 
@@ -79,7 +81,7 @@ The application exposes REST endpoints and one health check. In local demo mode 
 | GET | `http://127.0.0.1:8099/api/equipment` | List equipment or combine keyword, category and status filters. | 200 |
 | GET | `http://127.0.0.1:8099/api/equipment/ASSET_ID` | Retrieve one asset by its database ID. | 200 |
 | PUT | `http://127.0.0.1:8099/api/equipment/ASSET_ID` | Replace editable fields. Include code, name, category and location. | 200 |
-| DELETE | `http://127.0.0.1:8099/api/equipment/ASSET_ID` | Delete an available asset with no loan history. | 204 |
+| DELETE | `http://127.0.0.1:8099/api/equipment/ASSET_ID` | Delete an available asset with no loan history. | 200 |
 | PUT | `http://127.0.0.1:8099/api/equipment/ASSET_ID/maintenance` | Send an available asset for maintenance or restore it to available. | 200 |
 | POST | `http://127.0.0.1:8099/api/loans` | Check out an available asset and create an active loan. | 201 |
 | GET | `http://127.0.0.1:8099/api/loans` | Search loans by borrower, status or equipment ID. | 200 |

@@ -54,6 +54,6 @@ request 409 PUT "/api/loans/$LOAN_ID/return" '{}'
 request 409 DELETE "/api/equipment/$ASSET_ID"
 request 201 POST /api/equipment "{\"assetCode\":\"$PREFIX-DEL\",\"name\":\"Unused Demo Tripod\",\"category\":\"tripod\",\"location\":\"Demo Room\"}"
 DELETE_ID="$(record_id)"
-request 204 DELETE "/api/equipment/$DELETE_ID"
+request 200 DELETE "/api/equipment/$DELETE_ID"
 request 404 GET "/api/equipment/$DELETE_ID"
 printf '\nAll curl demonstrations passed. Retained equipment %s and returned loan %s as history.\n' "$ASSET_ID" "$LOAN_ID"

@@ -42,7 +42,7 @@ Run `npm start`. Wait for the server address, then open [Campus Gear](http://127
 
 ## Equipment CRUD in four commands
 
-Run these in a second Ubuntu terminal. Start with an unused asset code. Copy the **`data._id`** from Create and replace `ASSET_ID` in the next three commands. Each example prints the HTTP status and response.
+Run these in a second Ubuntu terminal. Start with an unused asset code. Read searches by asset code. In the returned list, find the exact `assetCode` and use its `_id` for `ASSET_ID` in Update and Delete. Each example prints the HTTP status and response.
 
 ### 1. Create — add a tripod (201)
 
@@ -50,10 +50,10 @@ Run these in a second Ubuntu terminal. Start with an unused asset code. Copy the
 curl -i -X POST 'http://127.0.0.1:8099/api/equipment' --json '{"assetCode":"CRUD-001","name":"Demo Tripod","category":"tripod","location":"Room A"}'
 ```
 
-### 2. Read — look up that tripod (200)
+### 2. Read — search by asset code (200)
 
 ```bash
-curl -i 'http://127.0.0.1:8099/api/equipment/ASSET_ID'
+curl -i 'http://127.0.0.1:8099/api/equipment?q=CRUD-001'
 ```
 
 ### 3. Update — move it to Room B (200)
@@ -85,7 +85,7 @@ The application exposes nine REST endpoints and one health check. In local demo 
 | GET | `http://127.0.0.1:8099/api/loans` | Search loans by borrower, status or equipment ID. | 200 |
 | PUT | `http://127.0.0.1:8099/api/loans/LOAN_ID/return` | Return an active loan and make the asset available again. | 200 |
 
-The four examples above cover equipment creation, retrieval by ID, update and deletion. For the remaining examples, choose another available asset and use its 24-character database ID for `ASSET_ID`.
+The four examples above cover equipment creation, search by asset code, update and deletion. For the remaining examples, choose another available asset and use its 24-character database ID for `ASSET_ID`.
 
 ### Health and equipment search
 
@@ -93,6 +93,7 @@ The four examples above cover equipment creation, retrieval by ID, update and de
 curl -i 'http://127.0.0.1:8099/health'
 curl -i 'http://127.0.0.1:8099/api/equipment'
 curl -i 'http://127.0.0.1:8099/api/equipment?q=Demo&category=projector&status=available'
+curl -i 'http://127.0.0.1:8099/api/equipment/ASSET_ID'
 ```
 
 `q` matches part of the asset code or name. Categories are `projector`, `microphone` and `tripod`. Status values are `available`, `borrowed` and `maintenance`. Equipment creation and updates also accept an optional `description`.

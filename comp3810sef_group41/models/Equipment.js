@@ -1,3 +1,9 @@
+/**
+ * Physical equipment record. One document represents one individual asset.
+ * `assetCode` is the natural key; `status` may only be changed through the
+ * service layer (checkout, return, maintenance).
+ */
+
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -24,6 +30,7 @@ const equipmentSchema = new Schema(
   },
   { timestamps: true },
 );
+// Supports the category + status filters on the list page and API.
 equipmentSchema.index({ category: 1, status: 1 });
 
 module.exports = mongoose.model('Equipment', equipmentSchema);

@@ -1,3 +1,9 @@
+/**
+ * Administrator account.
+ * `passwordHash` is `select: false`, so it is never returned by ordinary
+ * queries; login explicitly selects it for the bcrypt comparison.
+ */
+
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 

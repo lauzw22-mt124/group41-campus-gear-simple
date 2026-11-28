@@ -1,3 +1,11 @@
+/**
+ * Application bootstrap.
+ *
+ * `createApp` assembles middleware and routes and is exported for scripts and
+ * automated checks. `start` wires the local database, seed data, session store
+ * and HTTP listener when the file is executed directly by `npm start`.
+ */
+
 require('dotenv').config({ path: require('node:path').join(__dirname, '.env') });
 const express = require('express');
 const session = require('express-session');
@@ -7,9 +15,23 @@ const helmet = require('helmet');
 const path = require('node:path');
 const db = require('./database');
 const { loadUser, requireLogin, csrf } = require('./middleware/auth');
-const { fail, normalize } = require('./helpers');
+const { fail } = require('./helpers');
+const errorHandler = require('./middleware/errorHandler');
+const AuthRouter = require('./routes/AuthRouter');
+const ApiRouter = require('./routes/ApiRouter');
+const EquipmentRouter = require('./routes/EquipmentRouter');
+const LoanRouter = require('./routes/LoanRouter');
 
-// Tests create the same app with a temporary database and session store.
+/**
+ * Builds the Express application.
+ * @param {object} options
+ * @param {string} options.secret Session secret (at least 32 characters).
+ * @param {object} [options.store] express-session store.
+ * @param {boolean} [options.production] Enable HTTPS-only cookies and HSTS.
+ * @param {boolean} [options.apiAuthRequired] Require a session for API calls.
+ * @param {boolean} [options.trustProxy] Trust the first reverse proxy.
+ * @returns {import('express').Express} Configured application.
+ */
 function createApp({
   secret,
   store,
@@ -25,7 +47,7 @@ function createApp({
   if (trustProxy) app.set('trust proxy', 1);
   app.locals.apiAuthRequired = apiAuthRequired;
 
-  // 1. Read form/JSON input, serve static files and select EJS views.
+  // Request pipeline: security headers, static files, body parsers, health check.
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, 'views'));
   app.use(
@@ -44,7 +66,7 @@ function createApp({
     res.status(ready ? 200 : 503).json({ status: ready ? 'ok' : 'unavailable' });
   });
 
-  // 2. Restore the logged-in user and protect web forms against forged requests.
+  // Session restoration, CSRF protection and shared EJS helpers.
   app.use(
     session({
       name: 'group41.sid',
@@ -80,32 +102,24 @@ function createApp({
     next();
   });
 
-  // 3. API and web routes use the same service functions.
-  app.use(require('./routes/auth'));
-  app.use('/api', require('./routes/api'));
+  // Public entry points (sign-in, health, JSON API) followed by protected pages.
+  app.use(new AuthRouter().build());
+  app.use('/api', new ApiRouter().build());
   app.use(requireLogin);
   app.get('/', (req, res) => res.redirect('/equipment'));
-  app.use('/equipment', require('./routes/equipment'));
-  app.use('/loans', require('./routes/loans'));
+  app.use('/equipment', new EquipmentRouter().build());
+  app.use('/loans', new LoanRouter().build());
   app.use((req, res) => fail(404, 'NOT_FOUND', 'Page or endpoint not found.'));
 
-  // Express 5 forwards errors from async routes to this one handler.
-  app.use((err, req, res, next) => {
-    const error = normalize(err);
-    if (error.status >= 500) console.error(err.message);
-    if (req.path.startsWith('/api/')) {
-      return res.status(error.status).json({ error: { code: error.code, message: error.message } });
-    }
-    res.status(error.status).render('error', {
-      title: 'Unable to complete the action',
-      error,
-      user: req.user || null,
-      csrf: res.locals.csrf || '',
-    });
-  });
+  app.use(errorHandler);
   return app;
 }
 
+/**
+ * Connects the local MongoDB, seeds initial data, starts the session store and
+ * listens on 127.0.0.1:PORT. Handles startup errors and graceful shutdown.
+ * @returns {Promise<void>}
+ */
 async function start() {
   if (
     !process.env.SESSION_SECRET ||
@@ -130,7 +144,7 @@ async function start() {
     apiAuthRequired: process.env.API_AUTH_REQUIRED === 'true',
   });
   const port = Number(process.env.PORT || 8099);
-  const host = '127.0.0.1'; // Local classroom use only.
+  const host = '127.0.0.1'; // Loopback-only deployment.
   const server = app.listen(port, host, () => console.log(`Campus Gear: http://${host}:${port}`));
   server.on('error', async (err) => {
     console.error(

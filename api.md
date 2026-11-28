@@ -1,117 +1,188 @@
 # Campus Gear API
 
-Run the server with `npm start` and run the examples in a second Ubuntu terminal. Each command prints the status, headers and JSON body. The local demo uses `API_AUTH_REQUIRED=false`. In authenticated mode, sign in and pass the session cookie with each API request as described in the [authentication guide](comp3810sef_group41/docs/API.md#curl-when-api-authentication-is-enabled).
+Base URL: `http://127.0.0.1:8099`. Responses are JSON. `POST` and `PUT` require `Content-Type: application/json`. In local mode (`API_AUTH_REQUIRED=false`) no login is required; with `API_AUTH_REQUIRED=true`, send the signed-in session cookie. IDs are 24-character hexadecimal strings.
 
-## Equipment CRUD by asset code
+## Health
 
-Run these four commands in order with an unused code. Codes are unique, case-insensitive and stored in uppercase. Each URL identifies one exact code. The response includes MongoDB IDs, but these four operations only require the asset code.
+`GET /health`
 
-| Step | Success | Response body |
-| --- | --- | --- |
-| Create | 201 Created | `{"data": Equipment}` with status `available` |
-| Read | 200 OK | `{"data": Equipment}` |
-| Update | 200 OK | `{"data": Equipment}` with the saved fields |
-| Delete | 200 OK | `{"ok":true}` where `ok` is a JSON boolean |
-
-```bash
-curl -i -X POST 'http://127.0.0.1:8099/api/equipment' --json '{"assetCode":"DOC-001","name":"Demo Tripod","category":"tripod","location":"Room A"}'
-curl -i 'http://127.0.0.1:8099/api/equipment/by-code/DOC-001'
-curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/by-code/DOC-001' --json '{"assetCode":"DOC-001","name":"Demo Tripod","category":"tripod","location":"Room B"}'
-curl -i -X DELETE 'http://127.0.0.1:8099/api/equipment/by-code/DOC-001'
+```
+200 {"status":"ok"}
+503 {"status":"unavailable"}
 ```
 
-POST and PUT require `assetCode`, `name`, `category` and `location`. An omitted `description` becomes an empty string. To rename an asset, send the new code in the PUT body and use the old code in the URL. Later requests use the new code. Only an available asset with no loan history can be deleted. A second DELETE for a removed asset returns 404.
+## Equipment
 
-The following routes accept a 24-character hexadecimal database ID. They use the same payloads, success responses and rules as the corresponding by-code routes. Replace `ASSET_ID` with a real equipment ID.
+### List
 
-```bash
-curl -i 'http://127.0.0.1:8099/api/equipment/ASSET_ID'
-curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/ASSET_ID' --json '{"assetCode":"DOC-001","name":"Demo Tripod","category":"tripod","location":"Room B"}'
-curl -i -X DELETE 'http://127.0.0.1:8099/api/equipment/ASSET_ID'
+`GET /api/equipment?q=&category=&status=`
+
+All parameters optional. `category`: `projector | microphone | tripod`. `status`: `available | borrowed | maintenance`.
+
+```
+200 {"data":[Equipment, ...]}
 ```
 
-## Health and equipment search
+### Get
 
-```bash
-curl -i 'http://127.0.0.1:8099/health'
-curl -i 'http://127.0.0.1:8099/api/equipment'
-curl -i 'http://127.0.0.1:8099/api/equipment?q=projector&category=projector&status=available'
+`GET /api/equipment/:id`
+`GET /api/equipment/by-code/:assetCode`
+
+```
+200 {"data":Equipment}
 ```
 
-Health returns 200 and `{"status":"ok"}`. Both list requests return 200 and `{"data":[Equipment, ...]}`, sorted by asset code. An empty result is `{"data":[]}`. All filters are optional and combine with AND. The keyword `q` matches part of the asset code or name, ignoring case (maximum 80 characters). Category and status use the enum values below.
+### Create
 
-## Maintenance
+`POST /api/equipment`
 
-Choose an available asset from the equipment list. Replace `ASSET_ID` with its `_id`. Both calls return 200 and `{"data": Equipment}` with the updated status. A disallowed transition returns 409.
+```json
+{
+  "assetCode": "PROJ-001",
+  "name": "Portable Projector",
+  "category": "projector",
+  "location": "Room A",
+  "description": "HDMI cable included"
+}
+```
 
-```bash
-curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/ASSET_ID/maintenance' --json '{"status":"maintenance"}'
-curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/ASSET_ID/maintenance' --json '{"status":"available"}'
+Required: `assetCode`, `name`, `category`, `location`. `description` optional.
+
+```
+201 {"data":Equipment}
+```
+
+### Update
+
+`PUT /api/equipment/:id`
+`PUT /api/equipment/by-code/:assetCode`
+
+Body: same fields as create (full replacement).
+
+```
+200 {"data":Equipment}
+```
+
+### Delete
+
+`DELETE /api/equipment/:id`
+`DELETE /api/equipment/by-code/:assetCode`
+
+```
+200 {"ok":true}
+```
+
+### Maintenance
+
+`PUT /api/equipment/:id/maintenance`
+
+```json
+{"status":"maintenance"}
+```
+
+or
+
+```json
+{"status":"available"}
+```
+
+```
+200 {"data":Equipment}
 ```
 
 ## Loans
 
-**Borrow.** Supply the equipment ID, borrower name and borrower ID. Optional fields are `notes` and `dueAt` (a future ISO timestamp including a time zone). Success returns 201 and `{"data": Loan}`. The equipment becomes borrowed. Save the loan's own `data._id` as `LOAN_ID` for the return.
+### Borrow
 
-```bash
-curl -i -X POST 'http://127.0.0.1:8099/api/loans' --json '{"equipmentId":"ASSET_ID","borrowerName":"Chris Demo","borrowerId":"DEMO41"}'
+`POST /api/loans`
+
+```json
+{
+  "equipmentId": "24-hex-id",
+  "borrowerName": "Chris Wong",
+  "borrowerId": "S41001",
+  "dueAt": "2026-12-01T18:00:00+08:00",
+  "notes": "Optional"
+}
 ```
 
-**Search.** All filters are optional. `borrower` matches part of the name or borrower ID, ignoring case (maximum 80 characters). `status` accepts `active` or `returned`. `equipmentId` filters by equipment database ID. Success returns 200 and `{"data":[Loan, ...]}`, newest first. Each result includes the linked equipment object in `equipmentId`. An empty result is `{"data":[]}`.
+`dueAt` and `notes` optional. `dueAt` is a future ISO timestamp with a time zone.
 
-```bash
-curl -i 'http://127.0.0.1:8099/api/loans'
-curl -i 'http://127.0.0.1:8099/api/loans?borrower=DEMO41&status=active'
-curl -i 'http://127.0.0.1:8099/api/loans?equipmentId=ASSET_ID'
+```
+201 {"data":Loan}
 ```
 
-**Return.** Send an empty JSON object to return an active loan. Success returns 200 and `{"data": Loan}` with status `returned` and a recorded return time. The equipment becomes available. Returning the same loan again yields 409.
+### Search
 
-```bash
-curl -i -X PUT 'http://127.0.0.1:8099/api/loans/LOAN_ID/return' --json '{}'
+`GET /api/loans?borrower=&status=&equipmentId=`
+
+All parameters optional. `status`: `active | returned`.
+
+```
+200 {"data":[Loan, ...]}
 ```
 
-## JSON field types
+### Return
 
-All IDs serialize as hexadecimal strings. Dates serialize as UTC ISO 8601 strings. MongoDB may include a numeric `__v` version field.
+`PUT /api/loans/:id/return`
 
-| Equipment field | JSON type | Meaning or allowed value |
-| --- | --- | --- |
-| `_id` | string | Generated equipment ID |
-| `assetCode` | string | 1–32 letters, digits or hyphens |
-| `name`, `location` | string | Required, maximum 120 characters each |
-| `category` | string | `projector`, `microphone`, `tripod` |
-| `description` | string | Optional notes, maximum 1,000 characters |
-| `status` | string | `available`, `borrowed`, `maintenance` |
-| `createdAt`, `updatedAt` | string | Creation and last update times |
+```json
+{}
+```
 
-| Loan field | JSON type | Meaning or allowed value |
-| --- | --- | --- |
-| `_id` | string | Generated loan ID |
-| `equipmentId` | string on borrow/return, object on search | ID or populated Equipment |
-| `borrowerName`, `borrowerId` | string | Required, maximum 80 and 40 characters respectively |
-| `status` | string | `active` or `returned` |
-| `borrowedAt`, `createdAt`, `updatedAt` | string | Borrow, creation and update times |
-| `dueAt`, `returnedAt` | string or null | Expected return and actual return times |
-| `handledBy` | string or null | Administrator ID when available |
-| `notes` | string | Optional notes, maximum 1,000 characters |
+```
+200 {"data":Loan}
+```
+
+## Objects
+
+### Equipment
+
+```json
+{
+  "_id": "24-hex-id",
+  "assetCode": "PROJ-001",
+  "name": "Portable Projector",
+  "category": "projector",
+  "location": "Room A",
+  "status": "available",
+  "description": "",
+  "createdAt": "ISO 8601",
+  "updatedAt": "ISO 8601"
+}
+```
+
+### Loan
+
+```json
+{
+  "_id": "24-hex-id",
+  "equipmentId": "24-hex-id or Equipment object",
+  "borrowerName": "Chris Wong",
+  "borrowerId": "S41001",
+  "borrowedAt": "ISO 8601",
+  "dueAt": "ISO 8601 or null",
+  "returnedAt": "ISO 8601 or null",
+  "status": "active",
+  "handledBy": "24-hex-id or null",
+  "notes": "",
+  "createdAt": "ISO 8601",
+  "updatedAt": "ISO 8601"
+}
+```
 
 ## Errors
-
-API errors have an `error` object with two string fields. For example, querying a deleted asset returns HTTP 404:
 
 ```json
 {"error":{"code":"NOT_FOUND","message":"Equipment not found."}}
 ```
 
-| HTTP | Typical cause |
+| HTTP | Codes |
 | --- | --- |
-| 400 | Invalid ID, input, date, query or JSON |
-| 401 | Session required in authenticated mode |
-| 404 | Record or endpoint missing |
-| 409 | Duplicate asset code, unavailable equipment, repeated return or protected loan history |
-| 413 | Request body exceeds 20 KB |
-| 415 | POST or PUT body lacks the JSON content type |
-| 500 | Unexpected server error |
-
-To exercise the endpoints and check their HTTP codes against a running demonstration database, run `bash scripts/demo-api.sh http://127.0.0.1:8099` from the application folder.
+| 400 | `INVALID_INPUT`, `INVALID_ID`, `INVALID_DATE`, `INVALID_QUERY`, `UNKNOWN_FIELD`, `INVALID_JSON` |
+| 401 | `AUTH_REQUIRED` |
+| 404 | `NOT_FOUND` |
+| 409 | `DUPLICATE`, `NOT_AVAILABLE`, `INVALID_TRANSITION`, `ALREADY_RETURNED`, `HAS_LOAN_HISTORY`, `INCONSISTENT_STATE` |
+| 413 | `TOO_LARGE` |
+| 415 | `JSON_REQUIRED` |
+| 500 | `INTERNAL_ERROR` |

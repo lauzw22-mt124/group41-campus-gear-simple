@@ -1,138 +1,142 @@
-# Campus Gear — Group 41
+# Campus Gear
 
-## Project info
+Campus Gear is an equipment loan management system for campus audio-visual resources. It keeps one record per projector, microphone or tripod and tracks availability, maintenance, checkouts and returns.
 
-Campus Gear tracks individual projectors, microphones and tripods for campus loans. Administrators sign in to search equipment, change its location, check it out, record returns and manage maintenance. Each asset has a unique code and retains its loan history.
+## Features
 
-The application lives in `comp3810sef_group41/`. Express starts in `server.js`. The web and JSON routes in `routes/` share the borrowing and equipment rules in `services/`. Mongoose models in `models/` store records in local MongoDB, and EJS templates in `views/` render the management pages.
+- Session-based administrator authentication with rate-limited login.
+- Equipment register with unique asset codes, categories, locations and status.
+- Keyword, category and status search.
+- Checkout and return workflow with borrower details, optional due date and full loan history.
+- Maintenance state management.
+- REST API for equipment CRUD, maintenance and loan operations.
+- Consistent equipment and loan state through MongoDB transactions and a partial unique index.
+- Server-rendered interface with no front-end build step or external assets.
 
-## Group info
+## Technology
 
-| Role | Student | SID | Responsibility |
-| --- | --- | --- | --- |
-| A | LIU Jinwei | 13756142 | Server setup, login/logout and integration |
-| B | HE Ziqian | 13749372 | Mongoose models, database, seed data and equipment rules |
-| C | ZHU Hengxi | 13654149 | Equipment web CRUD and search filters |
-| D | LEI Haodong | 13733952 | Borrowing, returns and maintenance |
-| E | SHEN Xin | 13630649 | REST routes and curl demonstration |
-| F | LIU Jiaxu | 13710084 | Interface, testing and presentation coordination |
+| Area | Choice |
+| --- | --- |
+| Runtime | Node.js 22 or later |
+| Web framework | Express 5 |
+| Views | EJS |
+| Database | MongoDB 7 via Mongoose 8 |
+| Sessions | express-session with a MongoDB store |
+| Security | helmet, bcryptjs, express-rate-limit |
 
-## Startup guide
+## Architecture
 
-On Ubuntu 24.04, use Node.js 22 with npm. First-time setup requires internet access to download dependencies and MongoDB. Install the runtime libraries once:
+The system is a single Express application that serves both the management pages and the JSON API:
 
-```bash
-sudo apt update
-sudo apt install -y git curl libcurl4t64 libssl3t64
+```text
+Browser / API client
+        │
+        ▼
+Express application (server.js)
+  ├── routes/       class-based routers; each extends AbstractRouter
+  ├── services/     business rules; EquipmentService and LoanService
+  │                 share the CRUD flow defined by AbstractService
+  ├── models/       Mongoose schemas, indexes and validation rules
+  ├── lib/          input validation, error types and response envelopes
+  └── views/        EJS templates for the management interface
+        │
+        ▼
+MongoDB replica set (started locally by database.js)
 ```
 
-For a fresh checkout:
+Both layers use an abstract base class: `AbstractRouter` defines the route registration template (`register()` / `build()`), and `AbstractService` defines the shared CRUD template (`validatePayload` / `buildFilter` / `buildQuery`). The web pages and the JSON API call the same service methods, so validation and state transitions are enforced in one place. Equipment updates and loan creation or return run in a MongoDB transaction. A partial unique index permits many returned loans but only one active loan per asset.
+
+## Project layout
+
+```text
+comp3810sef_group41/
+├── server.js                 application bootstrap and middleware
+├── database.js               MongoDB lifecycle and connection
+├── helpers.js                shared validation and error helpers
+├── lib/                      validation, errors, API response envelopes
+├── middleware/               session loading, authentication and CSRF
+├── models/                   Equipment, Loan and User schemas
+├── services/                 AbstractService, EquipmentService, LoanService
+├── routes/                   AbstractRouter and the page/API router classes
+├── views/                    EJS templates
+├── public/                   stylesheet and client-side scripts
+├── scripts/seed.js           initial administrator and sample data
+└── .env.example              configuration template
+```
+
+## Requirements
+
+- Node.js 22 or later and npm.
+- Internet access on first start to download the MongoDB 7.0.24 binary.
+- No external database server or Docker installation is required.
+
+## Installation
 
 ```bash
 git clone https://github.com/lauzw22-mt124/group41-campus-gear-simple.git
 cd group41-campus-gear-simple/comp3810sef_group41
 npm ci --ignore-scripts
-cp -n .env.example .env
+cp .env.example .env
+```
+
+Generate a session secret and paste it into `SESSION_SECRET` in `.env`:
+
+```bash
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 ```
 
-If you already have the source, open the folder containing `server.js` and `package.json` and start at `npm ci`. On first setup, paste the generated value into `SESSION_SECRET` in `.env`, keep `ADMIN_USERNAME=admin41` and set `ADMIN_PASSWORD` to a private password of at least 12 characters. Keep `PORT=8099` and `API_AUTH_REQUIRED=false` for the local curl demo. Existing installations keep their credentials.
+## Configuration
 
-Run `npm start`. Wait for the server address, then open [Campus Gear](http://127.0.0.1:8099/login) and sign in. Keep this terminal open. Press **Ctrl+C** to stop. On later runs, use `npm start` from the same folder. Records persist in `.local-data/mongodb/`.
-
-## Equipment CRUD in four commands
-
-Run these in a second Ubuntu terminal. Start with an unused asset code. Use the same asset code in all four commands. Codes are unique and are normalized to uppercase. Each example prints the HTTP status and response.
-
-### 1. Create — add a tripod (201)
-
-```bash
-curl -i -X POST 'http://127.0.0.1:8099/api/equipment' --json '{"assetCode":"CRUD-001","name":"Demo Tripod","category":"tripod","location":"Room A"}'
-```
-
-### 2. Read — search by asset code (200)
-
-```bash
-curl -i 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001'
-```
-
-### 3. Update — move it to Room B (200)
-
-```bash
-curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001' --json '{"assetCode":"CRUD-001","name":"Demo Tripod","category":"tripod","location":"Room B"}'
-```
-
-### 4. Delete — remove the unused tripod (200, `{"ok":true}`)
-
-```bash
-curl -i -X DELETE 'http://127.0.0.1:8099/api/equipment/by-code/CRUD-001'
-```
-
-## API reference
-
-See the [complete API guide](https://github.com/lauzw22-mt124/group41-campus-gear-simple/blob/main/api.md) for request examples and response types.
-
-The application exposes REST endpoints and one health check. In local demo mode the API accepts the curl requests below directly. With `API_AUTH_REQUIRED=true`, send a signed-in session cookie with each API request. Web management pages always require login.
-
-| Method | Full URL | Usage | Success |
+| Variable | Required | Default | Description |
 | --- | --- | --- | --- |
-| GET | `http://127.0.0.1:8099/health` | Check that the server is reachable. | 200 |
-| POST | `http://127.0.0.1:8099/api/equipment` | Create equipment with a unique asset code. | 201 |
-| GET | `http://127.0.0.1:8099/api/equipment` | List equipment or combine keyword, category and status filters. | 200 |
-| GET | `http://127.0.0.1:8099/api/equipment/ASSET_ID` | Retrieve one asset by its database ID. | 200 |
-| PUT | `http://127.0.0.1:8099/api/equipment/ASSET_ID` | Replace editable fields. Include code, name, category and location. | 200 |
-| DELETE | `http://127.0.0.1:8099/api/equipment/ASSET_ID` | Delete an available asset with no loan history. | 200 |
-| PUT | `http://127.0.0.1:8099/api/equipment/ASSET_ID/maintenance` | Send an available asset for maintenance or restore it to available. | 200 |
-| POST | `http://127.0.0.1:8099/api/loans` | Check out an available asset and create an active loan. | 201 |
-| GET | `http://127.0.0.1:8099/api/loans` | Search loans by borrower, status or equipment ID. | 200 |
-| PUT | `http://127.0.0.1:8099/api/loans/LOAN_ID/return` | Return an active loan and make the asset available again. | 200 |
+| `SESSION_SECRET` | Yes | — | Random string of at least 32 characters used to sign session cookies. |
+| `ADMIN_USERNAME` | Yes | `admin41` | Administrator username created on first start. |
+| `ADMIN_PASSWORD` | Yes | — | Administrator password of at least 12 characters. Used when the account is first created. |
+| `PORT` | No | `8099` | HTTP port. |
+| `API_AUTH_REQUIRED` | No | `false` | Set to `true` to require a signed-in session for API requests. |
 
-GET, PUT and DELETE also accept `http://127.0.0.1:8099/api/equipment/by-code/ASSET_CODE` for an exact code match. If an update changes the code, use the new code in later requests.
-
-The four examples above cover equipment creation, search by asset code, update and deletion. For the remaining examples, choose another available asset and use its 24-character database ID for `ASSET_ID`.
-
-### Health and equipment search
+## Running
 
 ```bash
-curl -i 'http://127.0.0.1:8099/health'
-curl -i 'http://127.0.0.1:8099/api/equipment'
-curl -i 'http://127.0.0.1:8099/api/equipment?q=Demo&category=projector&status=available'
-curl -i 'http://127.0.0.1:8099/api/equipment/ASSET_ID'
+npm start
 ```
 
-`q` matches part of the asset code or name. Categories are `projector`, `microphone` and `tripod`. Status values are `available`, `borrowed` and `maintenance`. Equipment creation and updates also accept an optional `description`.
+Open `http://127.0.0.1:8099/login` and sign in with the configured administrator credentials. The server binds to the loopback interface only.
 
-### Send for maintenance, then restore availability
+On first start the application downloads MongoDB 7.0.24, starts a local instance on `127.0.0.1:27041`, and seeds the administrator account and sample equipment. Existing records are preserved on later starts.
 
-```bash
-curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/ASSET_ID/maintenance' --json '{"status":"maintenance"}'
-curl -i -X PUT 'http://127.0.0.1:8099/api/equipment/ASSET_ID/maintenance' --json '{"status":"available"}'
-```
+## API
 
-### Borrow an asset
+The complete request and response reference is in [api.md](api.md). All endpoints return JSON. API access can run without a session in local mode, or require an authenticated session when `API_AUTH_REQUIRED=true`.
 
-```bash
-curl -i -X POST 'http://127.0.0.1:8099/api/loans' --json '{"equipmentId":"ASSET_ID","borrowerName":"Chris Demo","borrowerId":"DEMO41"}'
-```
+## Data and persistence
 
-Copy the loan's `data._id` from this response for `LOAN_ID`. Optional fields are `notes` and `dueAt` (a future ISO timestamp with a time zone).
+- Database files are stored in `comp3810sef_group41/.local-data/mongodb` and survive restarts.
+- The MongoDB binary cache is stored in `comp3810sef_group41/.cache/mongodb`.
+- Login sessions are stored in the MongoDB `sessions` collection.
+- Sample equipment and the administrator account are inserted only when missing; existing data and passwords are never overwritten.
 
-### Search loans
+## Security
 
-```bash
-curl -i 'http://127.0.0.1:8099/api/loans'
-curl -i 'http://127.0.0.1:8099/api/loans?borrower=DEMO41&status=active'
-curl -i 'http://127.0.0.1:8099/api/loans?equipmentId=ASSET_ID'
-```
+- Administrator passwords are stored as bcrypt hashes.
+- Login regenerates the session and is rate limited per IP address.
+- HTML form writes require a CSRF token; API writes require a JSON content type.
+- Security headers are applied with helmet, and all writable fields are validated against an allow-list.
+- EJS output is escaped, and the application sets `Cache-Control: no-store` on responses.
 
-`borrower` matches the borrower's name or ID. Use `active` for outstanding loans and `returned` for completed loans.
+## Version
 
-### Return a loan
+1.5.0
 
-```bash
-curl -i -X PUT 'http://127.0.0.1:8099/api/loans/LOAN_ID/return' --json '{}'
-```
+## Authors
 
-Successful data responses use `{"data": ...}`. Errors include a code and message. A duplicate asset code or a prohibited transition returns **409**. A missing record returns **404**. After a return, loan history remains attached to the equipment.
+Group 41:
 
-From the application folder, run `bash scripts/demo-api.sh http://127.0.0.1:8099` for the full curl demonstration against the running server. Run `npm test` for the regression suite with temporary databases.
+| Student | SID |
+| --- | --- |
+| LIU Jinwei | 13756142 |
+| HE Ziqian | 13749372 |
+| ZHU Hengxi | 13654149 |
+| LEI Haodong | 13733952 |
+| SHEN Xin | 13630649 |
+| LIU Jiaxu | 13710084 |

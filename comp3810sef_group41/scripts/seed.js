@@ -1,14 +1,25 @@
+/**
+ * Initial data for the local database.
+ * `seed` is idempotent: it inserts the administrator and sample equipment with
+ * `$setOnInsert`, so restarting the application never overwrites edits,
+ * passwords or loan states.
+ */
+
 require('dotenv').config({ path: require('node:path').join(__dirname, '..', '.env') });
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Equipment = require('../models/Equipment');
 const db = require('../database');
 
+/**
+ * Inserts missing administrator and sample equipment records.
+ * @param {{username: string, password: string}} credentials Administrator credentials.
+ * @returns {Promise<void>}
+ */
 async function seed({ username, password }) {
   if (!username || !password || password.length < 12 || password.startsWith('replace-')) {
     throw new Error('Set ADMIN_USERNAME and your own ADMIN_PASSWORD (at least 12 characters).');
   }
-  // Re-running seed inserts missing data only; it never resets passwords or loan states.
   await User.updateOne(
     { username },
     {
@@ -42,7 +53,7 @@ async function seed({ username, password }) {
           category,
           location,
           status,
-          description: 'Fictional demonstration equipment',
+          description: 'Sample equipment',
         },
       },
       { upsert: true },

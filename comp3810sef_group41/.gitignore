@@ -9,5 +9,5 @@ artifacts/
 .cache/
 *.zip
 
-# Persistent local database; never commit or include in submission ZIPs.
+# Local database files; not committed.
 .local-data/

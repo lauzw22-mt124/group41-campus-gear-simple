@@ -1,3 +1,10 @@
+/**
+ * Database lifecycle.
+ * `connect` attaches Mongoose to a MongoDB replica set and builds indexes;
+ * `connectLocal` starts a real, persistent local mongod process through
+ * `mongodb-memory-server`; `disconnect` stops both without deleting data.
+ */
+
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const { mkdir } = require('node:fs/promises');
@@ -7,6 +14,11 @@ const Equipment = require('./models/Equipment');
 const Loan = require('./models/Loan');
 const User = require('./models/User');
 
+/**
+ * Connects Mongoose to a replica set and initialises model indexes.
+ * @param {string} uri MongoDB connection URI.
+ * @returns {Promise<void>}
+ */
 async function connect(uri) {
   if (!uri) throw new Error('A MongoDB connection URI is required.');
   await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 });
@@ -15,12 +27,16 @@ async function connect(uri) {
     await mongoose.disconnect();
     throw new Error('Use a MongoDB replica set. Transactions require it.');
   }
-  // Build the unique indexes before accepting a checkout request.
+  // Indexes must exist before the first checkout request is served.
   await Promise.all([Equipment.init(), Loan.init(), User.init()]);
 }
 
-// Start a real MongoDB process on this computer, with permanent disk storage.
-// Tests can supply a separate directory/port; normal startup uses these defaults.
+/**
+ * Starts a real MongoDB process with persistent disk storage.
+ * @param {{directory?: string, port?: number}} [options]
+ *   Data directory root and MongoDB port.
+ * @returns {Promise<void>}
+ */
 async function connectLocal({
   directory = path.join(__dirname, '.local-data'),
   port = 27041,
@@ -59,12 +75,16 @@ async function connectLocal({
   await connect(`${uri}?replicaSet=group41`);
 }
 
+/**
+ * Stops Mongoose and the local mongod, keeping the data directory intact.
+ * @returns {Promise<void>}
+ */
 async function disconnect() {
   await mongoose.disconnect();
   if (localServer) {
-    // Never delete the persistent database when the website stops.
     await localServer.stop({ doCleanup: false, force: false });
     localServer = undefined;
   }
 }
+
 module.exports = { connect, connectLocal, disconnect };

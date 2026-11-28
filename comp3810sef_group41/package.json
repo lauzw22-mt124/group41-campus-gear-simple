@@ -1,15 +1,14 @@
 {
   "name": "comp3810sef-group41",
-  "version": "1.2.0",
+  "version": "1.5.0",
   "private": true,
-  "description": "Group41 campus equipment loan manager",
+  "description": "Campus Gear \u2014 campus equipment loan management system",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "start": "node server.js",
-    "seed": "node scripts/seed.js",
-    "test": "node --test --test-concurrency=1 tests/*.test.js"
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -22,8 +21,5 @@
     "helmet": "^8.1.0",
     "mongoose": "^8.19.0",
     "mongodb-memory-server": "^10.2.0"
-  },
-  "devDependencies": {
-    "supertest": "^7.1.4"
   }
 }

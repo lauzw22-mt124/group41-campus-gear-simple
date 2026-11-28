@@ -1,4 +1,4 @@
-/* Shared layout and controls. No framework or external font is needed. */
+/* Reset and base typography. */
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -8,6 +8,8 @@ body {
 }
 a { color: #176b65; text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* Page chrome: header, navigation and footer. */
 header {
   display: flex;
   align-items: center;
@@ -22,6 +24,8 @@ header {
 nav { display: flex; gap: 20px; }
 main { max-width: 1140px; margin: auto; padding: 32px 20px; min-height: 75vh; }
 footer { padding: 20px; text-align: center; color: #607078; font-size: 13px; }
+
+/* Headings, panels and compact helpers. */
 h1 { font-size: 28px; margin: 0 0 8px; }
 h2 { font-size: 20px; margin: 0 0 16px; }
 p { margin: 8px 0 16px; }
@@ -31,6 +35,8 @@ p { margin: 8px 0 16px; }
 small { display: block; }
 .editor { max-width: 700px; }
 .login { max-width: 440px; margin: 36px auto; }
+
+/* Forms and buttons. */
 label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
 input, select, textarea, button { font: inherit; }
 input, select, textarea {
@@ -66,20 +72,28 @@ button, .button {
 .filters { align-items: end; }
 .filters label { margin-bottom: 0; }
 .filters .grow { flex: 1; min-width: 180px; }
+
+/* Data tables. */
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
 th, td { padding: 14px 12px; border-bottom: 1px solid #dce2e5; vertical-align: top; }
 th { background: #f5f7f8; font-weight: 600; }
 td { min-width: 90px; max-width: 260px; overflow-wrap: anywhere; }
 td form { margin-top: 8px; }
+
+/* Equipment detail definition list. */
 dl { display: grid; grid-template-columns: 100px 1fr; gap: 12px; margin: 0; }
 dt { color: #607078; }
 dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Status badges and alerts. */
 .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; white-space: nowrap; }
 .available, .returned { color: #246347; background: #e5f4ec; }
 .borrowed, .active { color: #31568d; background: #e8effb; }
 .maintenance { color: #865b16; background: #fff1d8; }
 .alert { background: #fff0ed; color: #8c2f27; padding: 12px; border-radius: 5px; overflow-wrap: anywhere; }
+
+/* Small screens. */
 @media (max-width: 600px) {
   header { gap: 16px; padding: 16px; }
   .brand { flex-basis: 100%; }
